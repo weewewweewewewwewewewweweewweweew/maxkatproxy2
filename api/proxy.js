@@ -1,4 +1,4 @@
-// ФИНАЛЬНЫЙ ИСПРАВЛЕННЫЙ код для файла /api/proxy.js
+// Финальный, самый надежный код для /api/proxy.js
 
 export const config = {
   runtime: 'edge',
@@ -29,16 +29,21 @@ export default async function handler(request) {
       });
     }
     
-    // Копируем заголовки из оригинального запроса
-    const requestHeaders = new Headers(request.headers);
+    // ВАЖНОЕ ИЗМЕНЕНИЕ: Создаем новый, чистый объект заголовков
+    const headers = new Headers();
+
+    // Копируем только те заголовки, которые нам важны
+    if (request.headers.has('x-api-key')) {
+      headers.set('x-api-key', request.headers.get('x-api-key'));
+    }
+    if (request.headers.has('authorization')) {
+      headers.set('authorization', request.headers.get('authorization'));
+    }
     
-    // ВАЖНОЕ ИСПРАВЛЕНИЕ: Мы должны удалить 'host', чтобы fetch подставил правильный
-    requestHeaders.delete('host'); 
-    requestHeaders.delete('referer');
-    
+    // Делаем запрос к целевому API с нашими "чистыми" заголовками
     const apiResponse = await fetch(targetUrl, {
       method: request.method,
-      headers: requestHeaders, // теперь здесь НЕТ неправильного хоста
+      headers: headers, // Используем новый объект
       body: request.body,
       redirect: 'follow',
     });
@@ -52,6 +57,7 @@ export default async function handler(request) {
     return response;
 
   } catch (error) {
+    console.error('Proxy Error:', error);
     return new Response('Ошибка на стороне прокси-сервера.', {
       status: 500,
       headers: CORS_HEADERS,
