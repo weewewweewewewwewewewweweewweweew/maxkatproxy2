@@ -1,4 +1,4 @@
-// ИСПРАВЛЕННЫЙ код для файла /api/proxy.js
+// ФИНАЛЬНЫЙ ИСПРАВЛЕННЫЙ код для файла /api/proxy.js
 
 export const config = {
   runtime: 'edge',
@@ -32,12 +32,13 @@ export default async function handler(request) {
     // Копируем заголовки из оригинального запроса
     const requestHeaders = new Headers(request.headers);
     
-    // ВАЖНОЕ ИЗМЕНЕНИЕ: Мы больше НЕ удаляем заголовок 'host'
+    // ВАЖНОЕ ИСПРАВЛЕНИЕ: Мы должны удалить 'host', чтобы fetch подставил правильный
+    requestHeaders.delete('host'); 
     requestHeaders.delete('referer');
     
     const apiResponse = await fetch(targetUrl, {
       method: request.method,
-      headers: requestHeaders,
+      headers: requestHeaders, // теперь здесь НЕТ неправильного хоста
       body: request.body,
       redirect: 'follow',
     });
